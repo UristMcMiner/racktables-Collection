@@ -522,6 +522,7 @@ function updateconfig_PortGenerator()
   }
 }
 function PortTypes($row){
+//return TRUE; //DISABLE THE PORT FILTER
 $ports = array(24,19,1084,50010,50011,50009,50037,1202,1204,36,30);
 for($i=0;$i<count($ports);$i++)if($row[0]==$ports[$i])return TRUE;
 }
