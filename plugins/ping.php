@@ -116,9 +116,9 @@ if($current_key !== FALSE){
 	if($ip_arr[$current_key][2]!=0){
 		$date = date_create();
 		$time_diff=date_timestamp_get($date)-$ip_arr[$current_key][2];
-		if($time_diff>=604800){		echo '<tr class=trerror';$cnt_mismatch++;}
+		if($time_diff>=$time_inactive_long){		echo '<tr class=trerror';$cnt_mismatch++;}
 		else {
-			if ($time_diff>=86400){echo "<tr class=trinactive";$cnt_inactive++;}
+			if ($time_diff>=$time_inactive){echo "<tr class=trerror";$cnt_inactive++;}
 			else {echo "<tr class=trok";$cnt_ok++; }}
 		}
 	else {echo '<tr class=trnoreply';$cnt_noreply++;}
