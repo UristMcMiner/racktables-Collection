@@ -1,5 +1,5 @@
 <?php
-//
+// 
 // This extension for RackTables is used to generate ports based on object type and hardware type
 //
 // Version 1.1
@@ -9,8 +9,11 @@
 // http://racktablescode.j-tools.net
 //
 // Please do not remove the credentials if you alter this file.
+// 
+// Modified by Florian Baier
+// 02-2014
 //
-
+//Please do not remove the credentials if you alter this file
 /*
 This port generator is a replacement for the built-in auto port generator. I found the built-in version to be to limited. This port generator
 uses not only the object type but also the hardware type to determine the ports needed. The definition used to generate the ports is also used

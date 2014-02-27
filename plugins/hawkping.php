@@ -7,6 +7,11 @@
 // The purpose of this plugin is to map your IP ranges with the reality of your
 // network using ICMP.
 //
+//
+// Modified by Florian Baier
+// 27.02.2014
+//
+//
 // History
 // Version 1: Initial release after rewrite
 //
