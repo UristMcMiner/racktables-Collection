@@ -33,15 +33,19 @@ To use these functions, you need to make some changes to the Racktables Database
 
 For the new State you need to alter the object_state_information Table and the rackspace Table:
 //////////////////////////////////////////////////////////////////////////////////////////
+```mysql
 CREATE TABLE object_state_information(
 `to_mount` ENUM( 'yes', 'no' ) NOT NULL DEFAULT 'no',
 `id` int( 10 ) unsigned NOT NULL ,
 PRIMARY KEY ( `id` ) ,
 FOREIGN KEY ( id ) REFERENCES Object( id ) ON DELETE CASCADE ON UPDATE CASCADE
 );
+```
 //////////////////////////////////////////////////////////////////////////////////////////
+```mysql
 ALTER TABLE `rackspace` CHANGE `state` `state` ENUM( 'A', 'U', 'T', 'M' ) 
 CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT 'A';
+```
 //////////////////////////////////////////////////////////////////////////////////////////
 Warning: The Table names could be different(The capitalization can be different)
 
@@ -50,7 +54,7 @@ For the Management-"Monitoring" you need to add a new Network. At the Moment, th
 	1.1.0.0/20
 
 Also, you need to Insert a Value to the Config Table:
-
+```mysql
 INSERT INTO `Config` (
 `varname` ,
 `varvalue` ,
@@ -63,11 +67,11 @@ INSERT INTO `Config` (
 VALUES (
 'LAST_IP_RAC', '16842754', 'uint', 'no', 'no', 'no', 'Last IP used for dummy Network'
 );
-
+```
 Furthermore, a new Column is needed in object_state_information:
-
+```mysql
 ALTER TABLE `object_state_information` ADD `has_rac` ENUM( 'yes', 'no' ) NOT NULL DEFAULT 'no';
-
+```
 
 
 
