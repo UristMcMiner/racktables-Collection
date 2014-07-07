@@ -1,25 +1,25 @@
-Scripts & Plugins for Vanilla Racktables
-========================================
+##Scripts & Plugins for Vanilla Racktables
+
 This Repository contains some Scripts and Plugins for the Asset-Management Software
 Racktables.
  
-Scripts:
+####Scripts:
 
-hyper.php:
+#####hyper.php:
 
 This Script is for adding a Hypervisor to all Server of a certain Name-Pattern
 
 
-switchnameexp.php:
+#####switchnameexp.php:
 
 This Script is for exporting a config List for HP Procurve switches to configure Port Names 
 
 (although all Switches are exported, you need to be careful there)
 
 
-Plugins:
+####Plugins:
 
-local_portgenerator.php:
+#####local_portgenerator.php:
 
 This is a modified version of the Original local_portgenerator.
 
@@ -28,7 +28,7 @@ It features a Sidebar for Fast-Adding many Ports of different types.
 Installation Instructions are included in the file.
 
  
-ping.php:
+#####ping.php:
 
 This is a modified Version of the Ping plugin found on the contribs-site.
 
@@ -37,8 +37,8 @@ It features support for HAWK, a ICMP Ping tool that runs periodically and feeds 
 database. Installation Instructions are included in the file. 
 
 
-Modified Racktables
-=====================
+##Modified Racktables
+
 It also contains a "Patch" for Racktables for extended functionality, like
 a new Status for Hardware that is not mounted yet, an Export for labelling Cables,
 and "monitoring" for Servers with no Management Address.
