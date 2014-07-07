@@ -1,16 +1,13 @@
-racktables-Collection
-======================
-
-This Collection consists of plugins for the Asset-Management-System Racktables.
-
-New Plugins:
-============
-
-Hawk ICMP Ping: Display Pings based on the iphawk IPAM System (http://iphawk.sourceforge.net/)
+Scripts & Plugins for Vanilla Racktables
+========================================
+This Repository contains some Scripts and Plugins for the Asset-Management Software
+Racktables. 
 
 
-
-Modified Plugins:
-=================
-
-local_portgenerator.php: Translated the text to German, you can now select which Porttypes are shown in the table.
+Modified Racktables
+=====================
+It also contains a "Patch" for Racktables for extended functionality, like
+a new Status for Hardware that is not mounted yet, an Export for labelling Cables,
+and "monitoring" for Servers with no Management Address.
+To achieve this the base of Racktables was modified, and is not updatable through the
+Original Version of Racktables.

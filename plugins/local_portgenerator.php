@@ -1,5 +1,5 @@
 <?php
-// 
+//
 // This extension for RackTables is used to generate ports based on object type and hardware type
 //
 // Version 1.1
@@ -9,96 +9,7 @@
 // http://racktablescode.j-tools.net
 //
 // Please do not remove the credentials if you alter this file.
-// 
-// Modified by Florian Baier
-// 02-2014
 //
-//Please do not remove the credentials if you alter this file
-/*
-This port generator is a replacement for the built-in auto port generator. I found the built-in version to be to limited. This port generator
-uses not only the object type but also the hardware type to determine the ports needed. The definition used to generate the ports is also used
-maintainable through the same interface. It will also allow you to use the attribute 'number of ports' when generating ports which can be
-convenient for example with patch panels.
-
-The way it works is easy. A new table is created which holds the definition per dictionary key. When an object has no ports defined yet
-(and the object type is not in the exclude-from-port-generator list ($noPortGenerator)) a tab will pop up for the selected object.
-
-If there already is a definition for a specific hardware type the ports that will be generated is shown. With one click those ports are
-generated. You can also chose to update the definition (or create one if the object type or hardware type does not already have one.
-
-A definition consists of one or more semicolon seperated port definitions. Each definition has 4 or optionally 5 parts which are seperated by a |
-The 5 parts are:
-Start number : at which number should the range start. If there is only 1 port this can be set at anything
-Count : the number of ports of this type (this is where you can use %n for the value of the attribute number of ports)
-Port name : the name of the port. If the count is greater than 1 you should include %u which is replaced by the the number.
-Port type id : the port type id of this group of ports
-Label : optional, the label for the port. Again you can should use %u if you have more than 1 port. If you do not include it, the label
-will be left blank
-
-An example for a server:
-1|2|pwr%u|16;0|2|eth%u|24|%u
-
-This will generate the following ports:
-pwr1 of type 16
-pwr2 of type 16
-eth0 of type 24 with label 0
-eth1 of type 24 with label 1
-
-An example for a patch panel:
-1|%n|eth%u|24|%u;1|%n|eth%ulink|50198
-
-This will generate the following ports:
-eth1 of type 24 with label 1
-eth2 of type 24 with label 2
-....
-ethx of type 24 with label x (where x is the number of ports defined in the attribute)
-eth1link of type 50198 (the type we use for utpLink cable)
-....
-ethxlink of type 50198 (where x is the number of ports defined in the attribute)
-
-Example for a Port Innerinterface + Outerinterface:
-1|2|G%u|4-1077|gigabitEthernet0/%u
-
-This will generate the following ports:
-G1 of inner Type 4 and outer type 1077 (SFP-1000 with empty SFP-1000 inside)
-G2 of inner Type 4 and outer type 1077 (SFP-1000 with empty SFP-1000 inside)
-
-Example for a Port Innerinterface + Outerinterface: 
-1|2|G%u|4-1077|gigabitEthernet0/%u
-
-This will generate the following ports:
-G1 of inner Type 4 and outer type 1077 (SFP-1000 with empty SFP-1000 inside)
-G2 of inner Type 4 and outer type 1077 (SFP-1000 with empty SFP-1000 inside)
-
-*/
-
-//
-// This php file depends on 2 variables and 2 constants that have to be set before this file is included:
-//
-// $tablePortGenerator is the name of the table used
-// $noPortGenerator contains dictionary keys that will not have a portgenerator
-// _portGeneratorHWType the attribute key for the hardware type attribute, in the default installation this is 2
-// _portGeneratorNumberOfPorts the attribute key for the number of ports attribute, in default installation this is 6
-//
-
-//
-// It also depends on a new table which contains all the autoport configurations
-//
-// SQL statement to create this:
-/*
-CREATE TABLE IF NOT EXISTS `AutoPort` (
-`dict_key` int(11) NOT NULL,
-`autoportconfig` text NOT NULL,
-UNIQUE KEY `dict_key` (`dict_key`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-*/
-//
-
-//
-// Set up the RackTables variables that create the tab
-// The tab only shows up if there are no ports yet defined
-//
-// The functions referred to in the handlers and trigger are all in this php file
 //-----------------------------------
 //Version 1.2
 //Revised by Jorge Sanchez
@@ -128,7 +39,7 @@ UNIQUE KEY `dict_key` (`dict_key`)
 //----------------------------------
 //Working On
 //----------------------------------
-//One: the padding with whitespace for each needs to be incorperated so that each cell is the same size. This is due to the browser more than anything else.
+//One: the padding with whitespace for each needs to be incorporated so that each cell is the same size. This is due to the browser more than anything else.
 //
 //Version 1.3
 //Revised by Jorge Sanchez
@@ -144,13 +55,23 @@ UNIQUE KEY `dict_key` (`dict_key`)
 //------------------------------------
 //Changes:
 //------------------------------------
-//*** Added support for PortInnterInterface ***
+//*** Added support for PortInnerInterface ***
 //
-
+//Version 1.5f
+//Revised by Florian Baier
+//07-2014
+//------------------------------------
+//Changes:
+//------------------------------------
+//***Added a Panel for a direct adding of Ports with different port types***
+//***Rewritten some Parts to fit 0.20.8***
+//***Excluded all Port Types by default, fill in your desired***
+//NOTE: You need to fill in all Port Type IDs you want to use at the bottom of this file
 $tab['object']['portgenerator'] = 'Port generator';
 $trigger['object']['portgenerator'] = 'localtrigger_PortGenerator';
 $tabhandler['object']['portgenerator'] = 'localfunc_PortGenerator';
 $ophandler['object']['portgenerator']['updateportgenerator'] = 'updateconfig_PortGenerator';
+$ophandler['object']['portgenerator']['addporteditor'] = 'addports_full';
 $ophandler['object']['ports']['addports'] = 'localexecute_PortGenerator';
 
 //
@@ -309,7 +230,7 @@ function localverify_PortGenerator($object) {
                          $oif_id = $matches[2];
                else
                   $oif_id = $thisOrder[3];
-                $q = "SELECT dict_value FROM Dictionary WHERE dict_key='$oif_id' AND chapter_id=2 ";
+                $q = "SELECT oif_id FROM PortInterfaceCompat WHERE oif_id='$oif_id'";
                 $result = usePreparedSelectBlade ($q);
                 if ($result==NULL) { print_r($dbxlink->errorInfo()); die(); }
                 if ($row3 = $result->fetch (PDO::FETCH_NUM)) {
@@ -356,6 +277,13 @@ function localfunc_PortGenerator()
   global $errorText, $lookFor, $portList, $genText, $valueConfiguration, $searchIt;
         assertUIntArg ('object_id', __FUNCTION__);
         $object = spotEntity ('object', $_REQUEST['object_id']);
+        
+        /// START PORTLET
+        //////////////////
+        print '<table>';
+        print '<colgroup width="1000" span="3">';
+        print '</colgroup>';
+        print "<td>";
   startPortlet("Port generator");
   print "<center><br>";
   if (!localverify_PortGenerator($object)) {
@@ -372,11 +300,13 @@ function localfunc_PortGenerator()
     //
     print "<a href='".makeHrefProcess(array('op'=>'addports','page'=>'object','object_id'=>$object['id'],'tab'=>'ports')).
       "'>Generate the ports for <b>{$object['name']}</b> as listed below NOW</a><br>\n";
-    print $genText."<p>";
+    //print $genText."<p>";
     print "<table cellspacing=0 cellpadding='5' align='center' class='widetable'>";
     print "<tr><th>Port name&nbsp;&nbsp;</th><th>Port label&nbsp;&nbsp;</th><th>Port type</th></tr>\n";
     foreach ($portList as $aPort) {
-      print "<tr><td>{$aPort['name']}</td><td>{$aPort['label']}</td><td>{$aPort['port_name']}</td></tr>\n";
+	  $fetch_name = usePreparedSelectBlade('SELECT oif_name FROM PortOuterInterface WHERE id='.$aPort['port_name']);
+	  $oif_pname = $fetch_name->fetchAll();
+      print "<tr><td>{$aPort['name']}</td><td>{$aPort['label']}</td><td>{$oif_pname[0][0]}</td></tr>\n";
     }
     print "</table>";
   }
@@ -398,14 +328,14 @@ function localfunc_PortGenerator()
     print "Generic".$genText."<p>\n";
     print "&lt;list1&gt;;&lt;list2&gt;;.... wobei &lt;listx&gt; ist:<br>";
     print "&lt;Start-Nummer&gt;|&lt;Anzahl Ports &gt;|";
-    print "&lt;Portname, %u für Nummerierung&gt;|&lt;Port-Typ ID&gt;<br><br>";
+    print "&lt;Portname, %u fÃ¼r Nummerierung&gt;|&lt;Port-Typ ID&gt;<br><br>";
     print "<b>BEISPIEL</b><br><br> 1|4|eth%u|24; <br><br>"; //an example of how to use port generator
-    print "<b>ERKLÄRUNG</b><br><br> <b>1</b> = Start-Nummer,
+    print "<b>ERKLÃ„RUNG</b><br><br> <b>1</b> = Start-Nummer,
 <br><b>15</b> = Anzahl generierter Ports,         
-<br><b>eth%u</b> = Fängt bei <b>Start-Nummer</b> an und erstellt die gewünschte <b>Anzahl Ports</b>,
+<br><b>eth%u</b> = FÃ¤ngt bei <b>Start-Nummer</b> an und erstellt die gewÃ¼nschte <b>Anzahl Ports</b>,
 <br><b>24</b> = Der Dictionary-Wert aus der Tabelle<br><br>"; //explains example
 print "<b>ACHTUNG:</b>Bei der Generierung von SFP+-Ports muss die Form angepasst werden. Anstatt x|y|z|1084 <b>muss</b> x|y|z|9-1084 benutzt werden <br><br>";
-    print "<b>BITTE BEACHTEN</b><br>Falls die gewählte Port-Typ-ID nicht aktiviert ist, führt dies zu einer Foreign-Key-Violation.
+    print "<b>BITTE BEACHTEN</b><br>Falls die gewÃ¤hlte Port-Typ-ID nicht aktiviert ist, fÃ¼hrt dies zu einer Foreign-Key-Violation.
 <br>Um die Ports zu aktivieren, bitte in der <b>Configuration</b> die Ports unter <b>Enable port types</b>
 aktivieren.<br><br><br>"; 
  print "</div>";
@@ -461,6 +391,98 @@ aktivieren.<br><br><br>";
     print "</tr></table>\n";
    
     finishPortlet();
+    print "</td>";
+    ///ENDPORTLET
+    /////////////
+    print "<td>";
+    startPortlet("Autoport Editor");
+///STYLE BEGIN
+print '<style type="text/css">';
+print 'label{display:block;}';
+print 'input[type="radio"] { float: left; }';
+print '</style>';
+///STYLE END
+printOpFormIntro('addporteditor');
+print '<table width="100%" rules="rows" border="1">';
+print "<colgroup>";
+print '<col width="1*">';
+print '<col width="1*">';
+print "</colgroup>";
+//MANAGEMENT BEGIN
+print "<tr>";
+print "<td>";
+print "<p><b> Interface Type:</b></p>";
+print "<p>";
+print '<label><input type="radio" name="interface_type" value="1"> iDRAC</label><br>';
+print '<label><input type="radio" name="interface_type" value="2"> MGMT</label><br>';
+print '<label><input type="radio" name="interface_type" value="3"> iLO</label><br>';
+print "</p>";
+print "</td>";
+print "<td>";
+print '<p>Typ: <select name="mgmt_type" style="width: 122px; float: right">';
+print '<option value="24">1000Base-T</option>';
+print "</td>";
+print "</tr>";
+//MANAGEMENT END
+//ETHERNET BEGIN
+print "<tr>";
+print "<td>";
+print "<p><b>Ethernet: </b></p> <br>";
+print '<p>Anzahl: <input type="text" name="eth_count" size="15" style="float: right"></p><br>';
+print '<p>Name: <input type="text" name="eth_name" size="15" style="float: right"></p><br>';
+print '<p>Start-Nummer: <input type="text" name="eth_start" size="15" value="0" style="float: right"></p><br>';
+print "</td>";
+print "<td>";
+print "<br><br><br>";
+print '<p>Typ: <select name="eth_type" style="width: 122px; float: right">';
+print '<option value="24">1000Base-T</option>';
+print "</td>";
+print "</tr>";
+//ETHERNET END
+//FC BEGIN
+print "<tr>";
+print "<td>";
+print "<p><b>Fibrechannel: </b></p> <br>";
+print '<p>Ports per Slot: <input type="text" name="fc_count" size="15" style="float: right"></p><br>';
+print '<p>Start-Nummer: <input type="text" name="fc_start" size="15" style="float: right"></p><br>';
+print '<p>Slots: <input type="text" name="fc_slot" size="15" style="float: right"></p><br>';
+print '<p>Slots mit Semikolon getrennt angeben, z.B. 5;6;8</p>';
+print "</td>";
+print "<td>";
+print "<br><br><br>";
+print '<p>Typ: <select name="fc_type" style="width: 122px; float: right">';
+print '<option value="9-36">LWL 4GBit/s</option>';
+print '<option value="9-36">LWL 8GBit/s</option>';
+print '<option value="9-36">LWL 16GBit/s</option>';
+print "</td>";
+print "</tr>";
+//FC END
+//SAS BEGIN
+print "<tr>";
+print "<td>";
+print "<p><b>SAS: </b></p> <br>";
+print '<p>Anzahl: <input type="text" name="sas_count" size="15" style="float: right"></p><br>';
+print '<p>Name: <input type="text" name="sas_name" size="15" style="float: right"></p><br>';
+print '<p>Startnummer: <input type="text" name="sas_start" size="15" style="float: right"></p><br>';
+print '<p>Anzahl Controller: <input type="text" name="sas_ctrler" size="15" style="float: right"></p><br>';
+print "</td>";
+print "<td>";
+print "<br><br><br>";
+print '<p>Typ: <select name="sas_type" style="width: 122px; float: right">';
+print '<option value="24">SAS 6GBit/s</option>';
+print "</td>";
+print "</tr>";
+//SAS END
+print '<input type="hidden" name="objectid" value="'.$_REQUEST['object_id'].'">';
+print "</table>";
+print '<input type="submit" value=" Generate " width="300" height="50">';
+print "</form>";
+print "<br><br><br>";
+
+
+    finishPortlet();
+    print "</td>";
+    print "</table>";	
   }
 }
 
@@ -524,9 +546,106 @@ function updateconfig_PortGenerator()
     return setMessage ('error', $message="Error in update to auto port configuration");
   }
 }
-function PortTypes($row){
-//return TRUE; //DISABLE THE PORT FILTER
-$ports = array(24,19,1084,50010,50011,50009,50037,1202,1204,36,30);
-for($i=0;$i<count($ports);$i++)if($row[0]==$ports[$i])return TRUE;
+
+
+function addports_full(){
+$object_id = $_POST['objectid'];
+print $object_id;
+//MGMT ADD BEGIN
+$mgmt_string;
+$mgmt_brand = $_POST['interface_type'];
+$mgmt_int   = $_POST['mgmt_type'];
+switch($mgmt_brand){
+	case 1: $mgmt_string = "iDRAC";
+			break;
+	case 2: $mgmt_string = "MGMT";
+			break;
+	case 3: $mgmt_string = "iLO";
+			break;
+	default:$mgmt_string = null;
+			break;
 }
+if(isset($mgmt_string))commitAddPort($object_id, $mgmt_string, $mgmt_int, null, null);
+
+//MGMT ADD END
+$i = 0;
+//ETH ADD BEGIN
+$eth_string;
+$eth_int   = $_POST['eth_type'];
+$eth_count = $_POST['eth_count'];
+$eth_start = $_POST['eth_start'];
+$eth_name  = $_POST['eth_name'];
+if($eth_count == "") $eth_count = null;
+if($eth_start == "") $eth_start = null;
+if($eth_name == "")  $eth_name  = "eth";
+if(isset($eth_count) && isset($eth_start)){
+	for($i = $eth_start; $i < ($eth_count + $eth_start); $i++){
+		commitAddPort($object_id, $eth_name . $i, $eth_int, null,null);
+	}
+} 
+//ETH ADD END
+$i = 0;
+//FC ADD BEGIN
+$fc_bool_slot  = TRUE;
+$fc_bool_count = TRUE;
+$fc_string;
+$fc_int   = $_POST['fc_type'];
+$fc_count = $_POST['fc_count'];
+$fc_slot  = $_POST['fc_slot'];
+$fc_start = $_POST['fc_start'];
+$fc_slot_exp = explode(';', $fc_slot);
+if($fc_count == "")$fc_bool_count = FALSE;
+if($fc_slot  == "")$fc_bool_slot  = FALSE;
+if($fc_start == "")$fc_start=0;
+if(fc_bool_count && $fc_bool_slot){
+	for($i = 0; $i < count($fc_slot_exp); $i++){
+		for($j = 0; $j < $fc_count; $j++){
+			$fc_string = 'S' . $fc_slot_exp[$i] . chr(65 + $j);
+			commitAddPort($object_id, $fc_string, $fc_int,$slot_div , null);
+		}
+	}
+}
+//FC ADD END
+$i = 0;
+//SAS ADD BEGIN
+$sas_end = 0;
+$sas_string;
+$sas_int   = $_POST['sas_type'];
+$sas_count = $_POST['sas_count'];
+$sas_start = $_POST['sas_start'];
+$sas_name  = $_POST['sas_name'];
+$sas_ctrler= $_POST['sas_ctrler'];
+if($sas_count == "") $sas_count = null;
+if($sas_start == "") $sas_start = null;
+if($sas_name == "")  $sas_name  = "SAS";
+if($sas_ctrler == "")$sas_ctrler = 0;
+
+if($sas_ctrler == 0){
+	for($i = $sas_start; $i < ($sas_count + $sas_start); $i++){
+		commitAddPort($object_id, $sas_name . $i, $sas_int, null, null);
+	}
+}else{
+	$sas_div = $sas_count / $sas_ctrler;
+	$sas_div = (int)$sas_div;
+	for($c = 0; $c <= $sas_ctrler; $c++){
+		for($d = 0; $d < $sas_div; $d++){
+			if($sas_end == $sas_count)break 2;
+			$sas_end++;
+			$sas_string = ("C" . $c . "_" . $sas_name . $d);
+			commitAddPort($object_id, $sas_string, $sas_int, null, null);
+
+		}
+	}
+}
+
+//SAS ADD END
+}
+
+//CONFIGURE PORT TYPES
+function PortTypes($row){
+$ports = array(/*List all wanted Port types here*/);
+for($i=0;$i<count($ports);$i++)if($row[0]==$ports[$i])return TRUE;
+}//EOF CONFIG PORT TYPES
+
+
 ?>
