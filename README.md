@@ -47,10 +47,12 @@ ALTER TABLE `rackspace` CHANGE `state` `state` ENUM( 'A', 'U', 'T', 'M' )
 CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT 'A';
 ```
 //////////////////////////////////////////////////////////////////////////////////////////
+
 Warning: The Table names could be different(The capitalization can be different)
 
 
-For the Management-"Monitoring" you need to add a new Network. At the Moment, this Range is fixed.
+For the Management-"Monitoring" you need to add a new Network. At the Moment, this Range is fixed:
+
 	1.1.0.0/20
 
 Also, you need to Insert a Value to the Config Table:
