@@ -1,25 +1,41 @@
 Scripts & Plugins for Vanilla Racktables
 ========================================
 This Repository contains some Scripts and Plugins for the Asset-Management Software
-Racktables. 
+Racktables.
+ 
 Scripts:
+
 hyper.php:
+
 This Script is for adding a Hypervisor to all Server of a certain Name-Pattern
 
+
 switchnameexp.php:
+
 This Script is for exporting a config List for HP Procurve switches to configure Port Names 
+
 (although all Switches are exported, you need to be careful there)
 
+
 Plugins:
+
 local_portgenerator.php:
+
 This is a modified version of the Original local_portgenerator.
+
 It features a Sidebar for Fast-Adding many Ports of different types.
+
 Installation Instructions are included in the file.
+
  
 ping.php:
+
 This is a modified Version of the Ping plugin found on the contribs-site.
+
 It features support for HAWK, a ICMP Ping tool that runs periodically and feeds a 
+
 database. Installation Instructions are included in the file. 
+
 
 Modified Racktables
 =====================
@@ -32,7 +48,7 @@ Update Cycle of Racktables.
 To use these functions, you need to make some changes to the Racktables Database:
 
 For the new State you need to alter the object_state_information Table and the rackspace Table:
-//////////////////////////////////////////////////////////////////////////////////////////
+
 ```mysql
 CREATE TABLE object_state_information(
 `to_mount` ENUM( 'yes', 'no' ) NOT NULL DEFAULT 'no',
@@ -41,12 +57,12 @@ PRIMARY KEY ( `id` ) ,
 FOREIGN KEY ( id ) REFERENCES Object( id ) ON DELETE CASCADE ON UPDATE CASCADE
 );
 ```
-//////////////////////////////////////////////////////////////////////////////////////////
+
 ```mysql
 ALTER TABLE `rackspace` CHANGE `state` `state` ENUM( 'A', 'U', 'T', 'M' ) 
 CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT 'A';
 ```
-//////////////////////////////////////////////////////////////////////////////////////////
+
 
 Warning: The Table names could be different(The capitalization can be different)
 
