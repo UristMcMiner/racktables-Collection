@@ -14,7 +14,7 @@ This Script is for adding a Hypervisor to all Server of a certain Name-Pattern
 
 This Script is for exporting a config List for HP Procurve switches to configure Port Names 
 
-(although all Switches are exported, you need to be careful there)
+(although all Switches are exported, you need to be careful here)
 
 
 ####Plugins:
